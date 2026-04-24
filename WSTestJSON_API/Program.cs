@@ -7,6 +7,8 @@ using WSTestJSON_API.Data;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<APIDbContext>(options =>
     options.UseSqlServer(("Data Source=DESKTOP-UG0DHU2\\MSSQLALBERTO2026;Initial Catalog=TestDB;User ID=sa;Password=Iamd3ath;TrustServerCertificate=True")));
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // Add services to the container.
 
@@ -16,7 +18,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        policy.WithOrigins(
+            "http://localhost:8100",   // For 'ionic serve' browser testing
+            "capacitor://localhost",    // For iOS Capacitor apps
+            "http://localhost",
+            "https://localhost:8100",
+            "httpa://localhost"
+        ).AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
 
@@ -41,7 +49,7 @@ var app = builder.Build();
 
 app.UseCors("AllowAll");
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 

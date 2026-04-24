@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.Data;
@@ -35,7 +36,8 @@ namespace WSTestJSON_API.Controllers
 
         //obtener tdos los usuarios
         // GET: api/Usuarios
-        [HttpGet("getusuarios")]
+        [Authorize]
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<Usuarios>>> GetUsuariosList()
         {
             try
@@ -87,8 +89,9 @@ namespace WSTestJSON_API.Controllers
                 {
                     access_token = jwtHandlder,
                     token_type = "bearer",
-                    user_id = loginData.IdUser,
-                    user_name = loginData.NombreUsuario
+                    idUser = loginData.IdUser,
+                    idRol = loginData.IdRol,
+                    NombreUsuario = loginData.NombreUsuario
                 });
             }
             catch (Exception ex)
@@ -99,7 +102,8 @@ namespace WSTestJSON_API.Controllers
         }
 
         //POST: api/usuarios/registrar
-        [HttpPost("registrar")]
+        [Authorize]
+        [HttpPost]
         public async Task<IActionResult> RegistrarUsuario([FromBody] Usuarios usuario)
         {
             try
@@ -138,7 +142,8 @@ namespace WSTestJSON_API.Controllers
 
         // PUT: api/Usuarios/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("editar/{id}")]
+        [Authorize]
+        [HttpPut("{id}")]
         public async Task<IActionResult> EditarUsuario(int id, [FromBody] Usuarios usuario)
         {
             if (id != usuario.IdUser) return BadRequest();
@@ -168,6 +173,7 @@ namespace WSTestJSON_API.Controllers
 
         // eliminar un usuario
         // DELETE: api/Usuarios/5
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUsuarios(int id)
         {
