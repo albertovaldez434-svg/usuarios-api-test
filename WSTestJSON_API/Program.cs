@@ -6,9 +6,11 @@ using System.Text;
 using WSTestJSON_API.Data;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<APIDbContext>(options =>
-    options.UseSqlServer(("Data Source=DESKTOP-UG0DHU2\\MSSQLALBERTO2026;Initial Catalog=TestDB;User ID=sa;Password=Iamd3ath;TrustServerCertificate=True")));
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DevConn")));
+//builder.Services.AddDbContext<APIDbContext>(options =>
+//    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+//var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+//builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // Add services to the container.
 
@@ -49,7 +51,7 @@ var app = builder.Build();
 
 app.UseCors("AllowAll");
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
