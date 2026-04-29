@@ -34,7 +34,7 @@ namespace WSTestJSON_API.Controllers
         }
 
 
-        //obtener tdos los usuarios
+        //obtener todos los usuarios
         // GET: api/Usuarios
         [Authorize]
         [HttpGet]
@@ -197,6 +197,33 @@ namespace WSTestJSON_API.Controllers
                 return StatusCode(500, "Error Interno del servidor");
             }
 
+        }
+
+        [Authorize]
+        [HttpGet("[action]/{id}")]
+        public async Task<ActionResult<IEnumerable<TareasUsuario>>> GetTareas(int id)
+        {
+            var tareas = await _context.TareasUsuario.Where(tasks => tasks.IdUser == id).ToListAsync();
+            if (!tareas.Any())
+            {
+                return NoContent();
+            }
+            return Ok(tareas);
+        }
+
+        [Authorize]
+        [HttpPost("[action]")]
+        public async Task<IActionResult> UpdateTarea([FromBody] TareasUsuario tareasUsuario)
+        {
+            var tareas = await _context.TareasUsuario.Where(tasks => tasks.Id == tareasUsuario.Id).FirstAsync();
+            if (tareas == null)
+            {
+                return NoContent();
+            }
+
+            tareas.Status = tareasUsuario.Status;
+            await _context.SaveChangesAsync();
+            return Ok(tareas);
         }
 
 
