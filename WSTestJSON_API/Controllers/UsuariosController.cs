@@ -66,7 +66,7 @@ namespace WSTestJSON_API.Controllers
         {
             try
             {
-                var loginData = await _context.Usuarios.AsNoTracking().FirstOrDefaultAsync(u => request.Usuario == u.NombreUsuario);
+                var loginData = await _context.Usuarios.AsNoTracking().FirstOrDefaultAsync(u => request.Email == u.Email);
                 if (loginData == null)
                     return NotFound("Datos incorrectos");
 
@@ -79,7 +79,7 @@ namespace WSTestJSON_API.Controllers
 
                 var claims = new[]
                 {
-                    new Claim(ClaimTypes.UserData, request.Usuario)
+                    new Claim(ClaimTypes.UserData, request.Email)
                 };
 
                 var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], claims: claims, expires: DateTime.Now.AddDays(1), signingCredentials: sign);
@@ -91,7 +91,7 @@ namespace WSTestJSON_API.Controllers
                     token_type = "bearer",
                     idUser = loginData.IdUser,
                     idRol = loginData.IdRol,
-                    NombreUsuario = loginData.NombreUsuario
+                    userInfo = loginData
                 });
             }
             catch (Exception ex)
@@ -221,7 +221,10 @@ namespace WSTestJSON_API.Controllers
                 return NoContent();
             }
 
+            tareas.Title = tareasUsuario.Title;
+            tareas.Description = tareasUsuario.Description;
             tareas.Status = tareasUsuario.Status;
+
             await _context.SaveChangesAsync();
             return Ok(tareas);
         }
