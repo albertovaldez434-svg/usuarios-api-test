@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.Data;
@@ -13,6 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
 using WSTestJSON_API.Data;
 using WSTestJSON_API.Models;
 
@@ -31,6 +32,24 @@ namespace WSTestJSON_API.Controllers
             _context = context;
             _logger = logger;
             _configuration = config;
+        }
+
+        [HttpGet("test-db")]
+        public async Task<IActionResult> TestDb()
+        {
+            try
+            {
+                using var connection = new NpgsqlConnection(
+                    _configuration.GetConnectionString("DefaultConnection"));
+
+                await connection.OpenAsync();
+
+                return Ok("Conexion exitosa");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
 
@@ -73,6 +92,10 @@ namespace WSTestJSON_API.Controllers
                 if (request.Password != loginData?.Password)
                     return Unauthorized("Datos incorrectos");
 
+                // buscar imagen
+                var imagen = await _context.ImagenesUsuarios.Where(img => img.IdUser == loginData.IdUser).OrderByDescending(x => x.Id).FirstOrDefaultAsync();
+                var avatarUrl = imagen?.URLPublica;
+
                 //generar jwt
                 var secKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
                 var sign = new SigningCredentials(secKey, SecurityAlgorithms.HmacSha256);
@@ -91,7 +114,8 @@ namespace WSTestJSON_API.Controllers
                     token_type = "bearer",
                     idUser = loginData.IdUser,
                     idRol = loginData.IdRol,
-                    userInfo = loginData
+                    userInfo = loginData,
+                    avatar = avatarUrl
                 });
             }
             catch (Exception ex)
@@ -227,6 +251,90 @@ namespace WSTestJSON_API.Controllers
 
             await _context.SaveChangesAsync();
             return Ok(tareas);
+        }
+
+
+        [Authorize]
+        [HttpPost("[action]")]
+        public async Task<IActionResult> CargarImagen(IFormFile file, [FromForm] int IdUser)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest();
+            }
+
+            // extensión
+            var extension = Path.GetExtension(file.FileName);
+
+            // nombre único
+            var fileName = $"{Guid.NewGuid()}.webp";
+
+            // path en storage
+            var pathArchivo = $"{IdUser}/{fileName}";
+
+            // URL pública
+            var publicUrl = $"https://hdsarnayyialwynbafhw.supabase.co/storage/v1/object/public/avatars/{pathArchivo}";
+
+            // =========================
+            // UPLOAD REAL A SUPABASE
+            // =========================
+
+            using var client = new HttpClient();
+
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue(
+                    "Bearer",
+                    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhkc2FybmF5eWlhbHd5bmJhZmh3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTMyMTU1MCwiZXhwIjoyMDk0ODk3NTUwfQ.xTgSKQ6WZ6khv7mDcau3ec1ci9J27CMpno3xrz_i0DI"
+                );
+
+            // opcional: reemplazar si existe
+            //client.DefaultRequestHeaders.Add(
+            //    "x-upsert",
+            //    "true"
+            //);
+
+            using var content =
+                new StreamContent(file.OpenReadStream());
+
+            content.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    file.ContentType
+                );
+
+            var response = await client.PostAsync(
+                $"https://hdsarnayyialwynbafhw.supabase.co/storage/v1/object/avatars/{pathArchivo}",
+                content
+            );
+
+            var responseText =
+                await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine(response.StatusCode);
+            Console.WriteLine(responseText);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return BadRequest(responseText);
+            }
+
+            // =========================
+            // UPLOAD metadata
+            // =========================
+
+            var imagen = new ImagenesUsuarios
+            {
+                Nombre = fileName,
+                PathArchivo = pathArchivo,
+                URLPublica = publicUrl,
+                MimeType = file.ContentType,
+                Extension = extension,
+                IdUser = IdUser
+            };
+
+            _context.ImagenesUsuarios.Add(imagen);
+
+            await _context.SaveChangesAsync();
+            return Ok(imagen);
         }
 
 

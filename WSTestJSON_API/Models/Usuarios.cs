@@ -11,7 +11,6 @@ namespace WSTestJSON_API.Models
         public string Telefono { get; set; }
         public string Email { get; set; }
         public int? IdRol { get; set; } 
-        public string? NombreUsuario { get; set; }
         public string? Password { get; set; }
     }
 

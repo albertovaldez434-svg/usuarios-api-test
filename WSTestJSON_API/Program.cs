@@ -5,10 +5,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WSTestJSON_API.Data;
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddDbContext<APIDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 //builder.Services.AddDbContext<APIDbContext>(options =>
-//    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+//    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<APIDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 //var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 //builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
