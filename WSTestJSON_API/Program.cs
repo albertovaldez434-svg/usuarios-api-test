@@ -25,7 +25,8 @@ builder.Services.AddCors(options =>
             "capacitor://localhost",    // For iOS Capacitor apps
             "http://localhost",
             "https://localhost:8100",
-            "https://localhost"
+            "https://localhost",
+            "http://192.168.0.39:8100"
         ).AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
