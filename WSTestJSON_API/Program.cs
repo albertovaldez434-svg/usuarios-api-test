@@ -21,13 +21,15 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:8100",   // For 'ionic serve' browser testing
-            "capacitor://localhost",    // For iOS Capacitor apps
             "http://localhost",
-            "https://localhost:8100",
             "https://localhost",
-            "http://192.168.0.39:8100"
-        ).AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+            "http://localhost:8100",
+            "https://localhost:8100",
+            "capacitor://localhost",
+            "ionic://localhost"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
 });
 
@@ -36,8 +38,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuer = true,
-                ValidateAudience = true,
+                ValidateIssuer = false,
+                ValidateAudience = false,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = builder.Configuration["Jwt:Issuer"],
@@ -50,9 +52,9 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-app.UseCors("AllowAll");
-
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 
