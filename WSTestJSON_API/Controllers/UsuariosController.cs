@@ -267,7 +267,7 @@ namespace WSTestJSON_API.Controllers
             var extension = Path.GetExtension(file.FileName);
 
             // nombre único
-            var fileName = $"{Guid.NewGuid()}.webp";
+            var fileName = "avatar.webp";
 
             // path en storage
             var pathArchivo = $"{IdUser}/{fileName}";
@@ -288,10 +288,10 @@ namespace WSTestJSON_API.Controllers
                 );
 
             // opcional: reemplazar si existe
-            //client.DefaultRequestHeaders.Add(
-            //    "x-upsert",
-            //    "true"
-            //);
+            client.DefaultRequestHeaders.Add(
+                "x-upsert",
+                "true"
+            );
 
             using var content =
                 new StreamContent(file.OpenReadStream());
