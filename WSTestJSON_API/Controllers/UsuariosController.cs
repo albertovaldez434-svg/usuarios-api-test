@@ -253,6 +253,20 @@ namespace WSTestJSON_API.Controllers
             return Ok(tareas);
         }
 
+        [Authorize]
+        [HttpPost("action")]
+        public async Task<IActionResult> AddTarea([FromBody] TareasUsuario nuevatarea)
+        {
+            if (nuevatarea == null)
+            {
+                return NoContent();
+            }
+
+            await _context.AddAsync(nuevatarea);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
 
         [Authorize]
         [HttpPost("[action]")]
