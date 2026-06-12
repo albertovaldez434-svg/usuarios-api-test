@@ -29,7 +29,6 @@ builder.Services.AddCors(options =>
             "ionic://localhost",
             "http://192.168.0.39"
         )
-        .AllowAnyOrigin()
         .AllowAnyHeader()
         .AllowAnyMethod();
     });
