@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WSTestJSON_API.Data;
+using WSTestJSON_API.Services;
 var builder = WebApplication.CreateBuilder(args);
 //builder.Services.AddDbContext<APIDbContext>(options =>
 //    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -33,6 +34,8 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod();
     });
 });
+
+builder.Services.AddScoped<IjwtService, jwtService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>

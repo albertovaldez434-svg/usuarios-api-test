@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using WSTestJSON_API.Data;
 using WSTestJSON_API.DTOs;
 using WSTestJSON_API.Models;
+using WSTestJSON_API.Services;
 
 namespace WSTestJSON_API.Controllers
 {
@@ -29,13 +30,15 @@ namespace WSTestJSON_API.Controllers
         private readonly APIDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpFactory;
+        private readonly IjwtService _jwtService;
 
-        public UsuariosController(APIDbContext context, ILogger<UsuariosController> logger, IConfiguration config, IHttpClientFactory httpFact)
+        public UsuariosController(APIDbContext context, ILogger<UsuariosController> logger, IConfiguration config, IHttpClientFactory httpFact, IjwtService ijwtSrvice)
         {
             _context = context;
             _logger = logger;
             _configuration = config;
             _httpFactory = httpFact;
+            _jwtService = ijwtSrvice;
 
         }
 
@@ -109,26 +112,13 @@ namespace WSTestJSON_API.Controllers
                 var imagen = await _context.ImagenesUsuarios.Where(img => img.IdUser == loginData.IdUser).OrderByDescending(x => x.Id).FirstOrDefaultAsync();
                 var avatarUrl = imagen?.URLPublica;
 
-                //generar jwt
-                var secKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-                var sign = new SigningCredentials(secKey, SecurityAlgorithms.HmacSha256);
-
-                var claims = new[]
-                {
-                     new Claim(ClaimTypes.NameIdentifier, loginData?.IdUser.ToString()),
-                     new Claim(ClaimTypes.UserData, request.Email),
-                     new Claim(ClaimTypes.Role, loginData?.IdRol.ToString())
-
-                };
-
-                var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], claims: claims, expires: DateTime.UtcNow.AddDays(1), signingCredentials: sign);
-                var jwtHandlder = new JwtSecurityTokenHandler().WriteToken(token);
+                var jwtHandler = _jwtService.GenerarToken(loginData);
 
                 int? idRol = loginData.IdRol;
 
                 var response = new LoginResponseDTO
                 {
-                    AccessToken = jwtHandlder,
+                    AccessToken = jwtHandler,
                     IdUser = loginData.IdUser,
                     IdRol = idRol,
                     Nombre = loginData.Nombre,
