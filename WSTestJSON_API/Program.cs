@@ -17,6 +17,8 @@ builder.Services.AddDbContext<APIDbContext>(options =>
 
 builder.Services.AddControllers();
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
