@@ -14,5 +14,4 @@ namespace WSTestJSON_API.Models
         public string? Password { get; set; }
     }
 
-
 }

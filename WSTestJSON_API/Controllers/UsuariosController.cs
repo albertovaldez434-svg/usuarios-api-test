@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using BCrypt.Net;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.Data;
@@ -15,6 +16,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using WSTestJSON_API.Data;
+using WSTestJSON_API.DTOs;
 using WSTestJSON_API.Models;
 
 namespace WSTestJSON_API.Controllers
@@ -26,31 +28,37 @@ namespace WSTestJSON_API.Controllers
         private readonly ILogger<UsuariosController> _logger;
         private readonly APIDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IHttpClientFactory _httpFactory;
 
-        public UsuariosController(APIDbContext context, ILogger<UsuariosController> logger, IConfiguration config)
+        public UsuariosController(APIDbContext context, ILogger<UsuariosController> logger, IConfiguration config, IHttpClientFactory httpFact)
         {
             _context = context;
             _logger = logger;
             _configuration = config;
+            _httpFactory = httpFact;
+
         }
 
-        [HttpGet("test-db")]
-        public async Task<IActionResult> TestDb()
-        {
-            try
-            {
-                using var connection = new NpgsqlConnection(
-                    _configuration.GetConnectionString("DefaultConnection"));
+        // test de conexion
+        #if DEBUG
+                [HttpGet("test-db")]
+                public async Task<IActionResult> TestDb()
+                {
+                    try
+                    {
+                        using var connection = new NpgsqlConnection(
+                            _configuration.GetConnectionString("DefaultConnection"));
 
-                await connection.OpenAsync();
+                        await connection.OpenAsync();
 
-                return Ok("Conexion exitosa");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+                        return Ok("Conexion exitosa");
+                    }
+                    catch (Exception ex)
+                    {
+                        return BadRequest(ex.Message);
+                    }
+                }
+        #endif
 
 
         //obtener todos los usuarios
@@ -89,7 +97,12 @@ namespace WSTestJSON_API.Controllers
                 if (loginData == null)
                     return NotFound("Datos incorrectos");
 
-                if (request.Password != loginData?.Password)
+                //if (request.Password != loginData?.Password)
+                //    return Unauthorized("Datos incorrectos");
+
+                var pswValid = BCrypt.Net.BCrypt.Verify(request.Password, loginData?.Password);
+
+                if (!pswValid)
                     return Unauthorized("Datos incorrectos");
 
                 // buscar imagen
@@ -102,21 +115,29 @@ namespace WSTestJSON_API.Controllers
 
                 var claims = new[]
                 {
-                    new Claim(ClaimTypes.UserData, request.Email)
+                     new Claim(ClaimTypes.NameIdentifier, loginData?.IdUser.ToString()),
+                     new Claim(ClaimTypes.UserData, request.Email),
+                     new Claim(ClaimTypes.Role, loginData?.IdRol.ToString())
+
                 };
 
-                var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], claims: claims, expires: DateTime.Now.AddDays(1), signingCredentials: sign);
+                var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], claims: claims, expires: DateTime.UtcNow.AddDays(1), signingCredentials: sign);
                 var jwtHandlder = new JwtSecurityTokenHandler().WriteToken(token);
 
-                return Ok(new
+                int? idRol = loginData.IdRol;
+
+                var response = new LoginResponseDTO
                 {
-                    access_token = jwtHandlder,
-                    token_type = "bearer",
-                    idUser = loginData.IdUser,
-                    idRol = loginData.IdRol,
-                    userInfo = loginData,
-                    avatar = avatarUrl
-                });
+                    AccessToken = jwtHandlder,
+                    IdUser = loginData.IdUser,
+                    IdRol = idRol,
+                    Nombre = loginData.Nombre,
+                    Apellidos = loginData.Apellidos,
+                    Email = loginData.Email,
+                    Avatar = avatarUrl
+                };
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -137,6 +158,8 @@ namespace WSTestJSON_API.Controllers
                 {
                     return BadRequest("Ya existe un usuario con estos datos");
                 }
+
+                usuario.Password = BCrypt.Net.BCrypt.HashPassword(usuario.Password);
 
                 await _context.AddAsync(usuario);
                 await _context.SaveChangesAsync();
@@ -197,10 +220,16 @@ namespace WSTestJSON_API.Controllers
 
         // eliminar un usuario
         // DELETE: api/Usuarios/5
-        [Authorize]
+        [Authorize(Roles = "1")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUsuarios(int id)
         {
+            var currentUsrId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            if (currentUsrId == id)
+            {
+                return Forbid();
+            }
 
             try
             {
@@ -227,6 +256,13 @@ namespace WSTestJSON_API.Controllers
         [HttpGet("[action]/{id}")]
         public async Task<ActionResult<IEnumerable<TareasUsuario>>> GetTareas(int id)
         {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            if (currentUserId != id)
+            {
+                return Forbid();
+            }
+
             var tareas = await _context.TareasUsuario.Where(tasks => tasks.IdUser == id).ToListAsync();
             if (!tareas.Any())
             {
@@ -236,13 +272,22 @@ namespace WSTestJSON_API.Controllers
         }
 
         [Authorize]
-        [HttpPost("[action]")]
+        [HttpPut("[action]")]
         public async Task<IActionResult> UpdateTarea([FromBody] TareasUsuario tareasUsuario)
         {
-            var tareas = await _context.TareasUsuario.Where(tasks => tasks.Id == tareasUsuario.Id).FirstAsync();
+            //** Lo comentareo porque quiero que se puedan asignar otros usuarios como en Jira
+            //var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            //if (currentUserId != tareasUsuario.IdUser)
+            //{
+            //    return Forbid();
+            //}
+
+            var tareas = await _context.TareasUsuario.FirstOrDefaultAsync(tasks => tasks.Id == tareasUsuario.Id);
+
             if (tareas == null)
             {
-                return NoContent();
+                return NotFound();
             }
 
             tareas.Title = tareasUsuario.Title;
@@ -259,7 +304,7 @@ namespace WSTestJSON_API.Controllers
         {
             if (nuevatarea == null)
             {
-                return NoContent();
+                return BadRequest();
             }
 
             await _context.AddAsync(nuevatarea);
@@ -273,6 +318,23 @@ namespace WSTestJSON_API.Controllers
         public async Task<IActionResult> CargarImagen(IFormFile file, [FromForm] int IdUser)
         {
             if (file == null || file.Length == 0)
+            {
+                return BadRequest();
+            }
+
+            if (file.Length > 5_000_000)
+            {
+                return BadRequest("Archivo demasiado grande");
+            }
+
+            var allowedTypes = new[]
+            {
+                "image/jpeg",
+                "image/png",
+                "image/webp"
+            };
+
+            if (!allowedTypes.Contains(file.ContentType))
             {
                 return BadRequest();
             }
@@ -293,12 +355,12 @@ namespace WSTestJSON_API.Controllers
             // UPLOAD REAL A SUPABASE
             // =========================
 
-            using var client = new HttpClient();
+            using var client = _httpFactory.CreateClient();
 
             client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue(
                     "Bearer",
-                    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhkc2FybmF5eWlhbHd5bmJhZmh3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTMyMTU1MCwiZXhwIjoyMDk0ODk3NTUwfQ.xTgSKQ6WZ6khv7mDcau3ec1ci9J27CMpno3xrz_i0DI"
+                    _configuration["Supabase:ServiceRoleKey"]
                 );
 
             // opcional: reemplazar si existe

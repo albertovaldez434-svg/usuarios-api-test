@@ -15,14 +15,5 @@ namespace WSTestJSON_API.Data
         public DbSet<TareasUsuario> TareasUsuario { get; set; }
 
         public DbSet<ImagenesUsuarios> ImagenesUsuarios { get; set; }
-
-
-        public class APIContext : DbContext
-        {
-            public APIContext(DbContextOptions<APIContext> dbCont) : base(dbCont)
-            {
-
-            }
-        }
     }
 }
