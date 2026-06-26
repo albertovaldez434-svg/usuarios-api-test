@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal;
 using System.Data;
-using System.Data.Common;
 using Dapper;
 using WSTestJSON_API.Models;
 

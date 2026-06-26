@@ -1,5 +1,4 @@
-﻿using BCrypt.Net;
-using WSTestJSON_API.Data;
+﻿using WSTestJSON_API.Data;
 using WSTestJSON_API.Models;
 
 namespace WSTestJSON_API.Services
