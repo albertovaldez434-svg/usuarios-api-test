@@ -39,6 +39,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IjwtService, jwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUploadImgService, UploadImgService>();
+builder.Services.AddScoped<IRestorePsw, restorePsw>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
