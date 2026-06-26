@@ -31,14 +31,16 @@ namespace WSTestJSON_API.Controllers
         private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpFactory;
         private readonly IjwtService _jwtService;
+        private readonly IAuthService _authService;
 
-        public UsuariosController(APIDbContext context, ILogger<UsuariosController> logger, IConfiguration config, IHttpClientFactory httpFact, IjwtService ijwtSrvice)
+        public UsuariosController(APIDbContext context, ILogger<UsuariosController> logger, IConfiguration config, IHttpClientFactory httpFact, IjwtService ijwtSrvice, IAuthService authService)
         {
             _context = context;
             _logger = logger;
             _configuration = config;
             _httpFactory = httpFact;
             _jwtService = ijwtSrvice;
+            _authService = authService;
 
         }
 
@@ -103,10 +105,15 @@ namespace WSTestJSON_API.Controllers
                 //if (request.Password != loginData?.Password)
                 //    return Unauthorized("Datos incorrectos");
 
-                var pswValid = BCrypt.Net.BCrypt.Verify(request.Password, loginData?.Password);
+                //var pswValid = BCrypt.Net.BCrypt.Verify(request.Password, loginData?.Password);
 
-                if (!pswValid)
-                    return Unauthorized("Datos incorrectos");
+                //if (!pswValid)
+                //    return Unauthorized("Datos incorrectos");
+
+                bool passwordInvalid = await _authService.ValidateHashPsw(loginData.Password, request.Password);
+
+                if (!passwordInvalid)
+                    return Unauthorized();            
 
                 // buscar imagen
                 var imagen = await _context.ImagenesUsuarios.Where(img => img.IdUser == loginData.IdUser).OrderByDescending(x => x.Id).FirstOrDefaultAsync();
