@@ -110,7 +110,7 @@ namespace WSTestJSON_API.Controllers
                 //if (!pswValid)
                 //    return Unauthorized("Datos incorrectos");
 
-                bool passwordInvalid = await _authService.ValidateHashPsw(loginData.Password, request.Password);
+                bool passwordInvalid = await _authService.ValidateHashPsw(loginData, request.Password);
 
                 if (!passwordInvalid)
                     return Unauthorized();            
