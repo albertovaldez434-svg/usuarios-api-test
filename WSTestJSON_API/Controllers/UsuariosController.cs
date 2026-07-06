@@ -64,7 +64,15 @@ namespace WSTestJSON_API.Controllers
         {
             try
             {
-                var usuarios = await _context.Usuarios.AsNoTracking().ToListAsync();
+                var usuarios = await _context.Usuarios.AsNoTracking().Select(u => new UsuariosDTO
+                {
+                    IdRol = u.IdRol,
+                    IdUser = u.IdUser,
+                    Nombre = u.Nombre,
+                    Apellidos = u.Apellidos,
+                    Telefono = u.Telefono,
+                    Email = u.Email
+                }).ToListAsync();
 
                 if (!usuarios.Any())
                 {
