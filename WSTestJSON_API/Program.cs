@@ -30,7 +30,8 @@ builder.Services.AddCors(options =>
             "capacitor://localhost",
             "ionic://localhost",
             "http://192.168.0.39",
-            "https://usuarios-kanban-demo.web.app/"
+            "https://usuarios-kanban-demo.web.app",
+            "https://usuarios-kanban-demo.firebaseapp.com"
         )
         .AllowAnyHeader()
         .AllowAnyMethod();
