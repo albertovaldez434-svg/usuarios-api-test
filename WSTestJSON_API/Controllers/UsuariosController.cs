@@ -55,7 +55,6 @@ namespace WSTestJSON_API.Controllers
         }
 #endif
 
-
         //obtener todos los usuarios
         // GET: api/Usuarios
         [Authorize]
@@ -224,85 +223,6 @@ namespace WSTestJSON_API.Controllers
 
         }
 
-        [Authorize]
-        [HttpGet("[action]/{id}")]
-        public async Task<ActionResult<IEnumerable<TareasUsuario>>> GetTareas(int id)
-        {
-            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
-            if (currentUserId != id)
-            {
-                return Forbid();
-            }
-
-            try
-            {
-                var tareas = await _context.TareasUsuario.Where(tasks => tasks.IdUser == id).ToListAsync();
-                if (!tareas.Any())
-                {
-                    return NoContent();
-                }
-                return Ok(tareas);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al cargar tareas");
-                return StatusCode(500, "Error Interno del servidor");
-            }
-        }
-
-        [Authorize]
-        [HttpPut("[action]")]
-        public async Task<IActionResult> UpdateTarea([FromBody] TareasUsuario tareasUsuario)
-        {
-            var tareas = await _context.TareasUsuario.FirstOrDefaultAsync(tasks => tasks.Id == tareasUsuario.Id);
-
-            if (tareas == null)
-            {
-                return NotFound();
-            }
-            try
-            {
-                tareas.Title = tareasUsuario.Title;
-                tareas.Description = tareasUsuario.Description;
-                tareas.Status = tareasUsuario.Status;
-
-                await _context.SaveChangesAsync();
-                return Ok(tareas);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al actualizar tarea");
-                return StatusCode(500, "Error Interno del servidor");
-            }
-
-
-
-        }
-
-        [Authorize]
-        [HttpPost("[action]")]
-        public async Task<IActionResult> AddTarea([FromBody] TareasUsuario nuevatarea)
-        {
-            if (nuevatarea == null)
-            {
-                return BadRequest();
-            }
-
-            try
-            {
-                await _context.AddAsync(nuevatarea);
-                await _context.SaveChangesAsync();
-                return Ok(nuevatarea);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al registrar nueva tarea");
-                return StatusCode(500, "Error Interno del servidor");
-            }
-        }
-
 
         [Authorize]
         [HttpPost("[action]")]
@@ -342,7 +262,6 @@ namespace WSTestJSON_API.Controllers
                 _logger.LogError(ex, "Error al cargar imagen");
                 return StatusCode(500, "Error Interno del servidor");
             }
-
 
         }
 
