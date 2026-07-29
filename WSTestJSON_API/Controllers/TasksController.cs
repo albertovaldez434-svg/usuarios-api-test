@@ -140,7 +140,7 @@ namespace WSTestJSON_API.Controllers
             {
                 _context.TareasUsuario.Remove(tarea);
                 await _context.SaveChangesAsync();
-                return Ok(tarea);
+                return Ok();
             }
             catch (Exception ex)
             {
