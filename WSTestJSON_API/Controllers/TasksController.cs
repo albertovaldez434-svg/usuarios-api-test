@@ -126,7 +126,27 @@ namespace WSTestJSON_API.Controllers
             }
         }
 
+        [Authorize]
+        [HttpDelete("[action]/{id}")]
+        public async Task<IActionResult> DeleteTarea(int id)
+        {
+            var tarea = await _context.TareasUsuario.FindAsync(id);
+            if (tarea == null)
+            {
+                return NotFound();
+            }
 
-
+            try
+            {
+                _context.TareasUsuario.Remove(tarea);
+                await _context.SaveChangesAsync();
+                return Ok(tarea);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar tarea");
+                return StatusCode(500, "Error Interno del servidor");
+            }
+        }
     }
 }
