@@ -32,8 +32,7 @@ builder.Services.AddCors(options =>
             "http://192.168.0.39",
             "https://usuarios-kanban-demo.web.app",
             "https://usuarios-kanban-demo.firebaseapp.com",
-            "https://usuarios-api-test.onrender.com"
-
+            "https://usuarios-test.onrender.com"
         )
         .AllowAnyHeader()
         .AllowAnyMethod();
