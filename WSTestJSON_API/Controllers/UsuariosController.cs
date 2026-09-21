@@ -57,7 +57,7 @@ namespace WSTestJSON_API.Controllers
 
         //obtener todos los usuarios
         // GET: api/Usuarios
-        [Authorize]
+        [Authorize(Policy = "CanReadUsuarios")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Usuarios>>> GetUsuariosList()
         {
@@ -86,6 +86,65 @@ namespace WSTestJSON_API.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
 
+        }
+
+        // obtener usuarios paginado y con filtro
+        // GET: api/Usuarios
+        [Authorize, HttpGet("[action]")]
+        public async Task<ActionResult<IEnumerable<Usuarios>>> getUsuariosListv2([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? filtro = null)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 50) pageSize = 50;
+
+            var query = _context.Usuarios.AsNoTracking();
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    var searchTerm = filtro.Trim().ToLower();
+                    query = query.Where(u =>
+                    u.Nombre.ToLower().Contains(searchTerm) ||
+                    u.Apellidos.ToLower().Contains(searchTerm) ||
+                    u.Email.ToLower().Contains(searchTerm) ||
+                    (u.Telefono != null && u.Telefono.ToLower().Contains(searchTerm)));
+                }
+
+                var totalCount = await query.CountAsync();
+
+                var usuarios = await query
+                    .OrderBy(u => u.IdUser)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(u => new UsuariosDTO
+                    {
+                        IdUser = u.IdUser,
+                        Nombre = u.Nombre,
+                        Apellidos = u.Apellidos,
+                        Email = u.Email,
+                        Telefono = u.Telefono,
+                        IdRol = u.IdRol
+                    })
+                    .ToListAsync();
+
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+                return Ok(new
+                {
+                    items = usuarios,
+                    page,
+                    pageSize,
+                    totalCount,
+                    totalPages
+                });
+            
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuarios paginados");
+                return StatusCode(500, "Error interno del servidor");
+            }
         }
 
         // hacer un login
