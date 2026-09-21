@@ -25,7 +25,9 @@ namespace WSTestJSON_API.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario?.IdUser.ToString()),
                 new Claim(ClaimTypes.UserData, usuario.Email),
-                new Claim(ClaimTypes.Role, usuario?.IdRol.ToString())
+                new Claim(ClaimTypes.Role, usuario?.IdRol.ToString()),
+                // test de permissions
+                new Claim("permission", "usuario.read")
             };
 
             var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], claims: claims, expires: DateTime.UtcNow.AddDays(1), signingCredentials: sign);

@@ -37,6 +37,7 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowAnyMethod();
     });
+
 });
 
 builder.Services.AddScoped<IjwtService, jwtService>();
@@ -60,6 +61,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
             };
         });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CanReadUsuarios", policy =>
+    {
+        policy.RequireClaim("permission", "usuario.read");
+    });
+});
 
 var app = builder.Build();
 
