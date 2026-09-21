@@ -57,7 +57,7 @@ namespace WSTestJSON_API.Controllers
 
         //obtener todos los usuarios
         // GET: api/Usuarios
-        [Authorize(Policy = "CanReadUsuarios")]
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Usuarios>>> GetUsuariosList()
         {
@@ -90,7 +90,8 @@ namespace WSTestJSON_API.Controllers
 
         // obtener usuarios paginado y con filtro
         // GET: api/Usuarios
-        [Authorize, HttpGet("[action]")]
+        [Authorize]
+        [HttpGet("[action]")]
         public async Task<ActionResult<IEnumerable<Usuarios>>> getUsuariosListv2([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? filtro = null)
         {
             if (page < 1) page = 1;

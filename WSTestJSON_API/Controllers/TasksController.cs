@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Configuration;
 using System.Security.Claims;
 using WSTestJSON_API.Data;
+using WSTestJSON_API.DTOs;
 using WSTestJSON_API.Models;
 
 namespace WSTestJSON_API.Controllers
@@ -73,6 +74,61 @@ namespace WSTestJSON_API.Controllers
             {
                 _logger.LogError(ex, "Error al cargar tareas");
                 return StatusCode(500, "Error Interno del servidor");
+            }
+        }
+
+        [Authorize]
+        [HttpGet("[action]")]
+        public async Task<ActionResult<IEnumerable<TareasUsuario>>> getTareasListv2([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? filtro = null)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 50) pageSize = 50;
+
+            var query = _context.TareasUsuario.AsNoTracking();
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    var searchTerm = filtro.Trim().ToLower();
+                    query = query.Where(t =>
+                    t.Title.ToLower().Contains(searchTerm) ||
+                    t.Description.ToLower().Contains(searchTerm));
+                }
+
+                var totalCount = await query.CountAsync();
+
+                var tareas = await query
+                    .OrderBy(t => t.Id)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(t => new TareasUsuario
+                    {
+                        Id = t.Id,
+                        Title = t.Title,
+                        Description = t.Description,
+                        Status = t.Status,
+                        IdUser = t.IdUser
+                    })
+                    .ToListAsync();
+
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+                return Ok(new
+                {
+                    items = tareas,
+                    page,
+                    pageSize,
+                    totalCount,
+                    totalPages
+                });
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuarios paginados");
+                return StatusCode(500, "Error interno del servidor");
             }
         }
 
