@@ -1,54 +1,40 @@
-# .NET Services API
+WSTestJSON_API — Proyecto personal de aprendizaje
 
-This project contains a set of RESTful services built with ASP.NET Core.
+Sobre el proyecto
+Este repositorio recoge mi trabajo de aprendizaje en desarrollo backend con .NET 10. 
+Implementé una REST API para gestión de usuarios usando Entity Framework Core y patrones básicos de arquitectura: separación de responsabilidades, uso de DTOs y buenas prácticas en diseño de endpoints.
 
-## 🚀 Overview
+Qué muestra mi trabajo
+- Endpoints REST claros y coherentes (GET, POST, PUT, DELETE).
+- Uso de DTOs para separar modelos de persistencia y contratos públicos.
+- Separación de responsabilidades: controladores, servicios/repositories y capa de acceso a datos.
+- Integración con EF Core para persistencia y soporte para migraciones.
+- Atención a validación de entrada, manejo de errores y preparación para pruebas automatizadas.
 
-The API provides basic endpoints using:
-- **ASP.NET Core Web API**
-- **Entity Framework Core** for data access
-- A test controller for **Dapper** (currently in progress, im learning ot use it properly)
+Stack técnico
+- Plataforma: .NET 10 (C#)
+- ORM: Entity Framework Core
+- Dependencias: NuGet
+- Entorno recomendado: Visual Studio 2026 o dotnet CLI
 
-The goal of this project is to serve as the backend layer for the [https://github.com/albertovaldez434-svg/usuarios-test] application while also exploring different data access approaches.
+Cómo ejecutar localmente
+1) Requisitos: .NET 10 SDK y Visual Studio 2026 o dotnet CLI.
+2) Abrir la solución: dotnet sln WSTestJSON_API.slnx o abrir en Visual Studio.
+3) Restaurar y compilar: dotnet restore && dotnet build
+4) Ejecutar la API: dotnet run --project <ruta-al-proyecto-api>
+5) Probar endpoints con Postman contra http://localhost:<puerto> (el puerto se muestra al arrancar).
 
----
+Pruebas
+- Pendientes! estoy enfocado actualmente en Angular 22
 
-## 🧱 Architecture
+Qué valorar si revisas este repo
+- Claridad en la separación entre DTOs, entidades y capas de servicio.
+- Correcto uso de EF Core y migraciones.
+- Manejo de errores, validaciones y respuestas HTTP consistentes.
+- Modularidad e inyección de dependencias que facilitan extensibilidad.
 
-- **Controllers**: Handle HTTP requests and responses
-- **Entity Framework Core**: Main ORM used for database operations
-**ORM = Object-Relational Mapping, oh nice (just found out what it means) **
-- **Dapper (WIP)**: Experimental controller to explore lightweight or more complex data access, if required
-** My previous short experiences was with VB and ADO.Net**
+Contacto y repositorio
+Repositorio: https://github.com/albertovaldez434-svg/usuarios-api-test
 
----
-
-## 📦 Endpoints
-
-Basic REST structure is implemented:
-
-- `GET /api/[controller]` → Retrieve data
-- `GET /api/[controller]/{id}` → Retrieve a single item
-- `POST /api/[controller]` → Create new records
-- `PUT /api/[controller]/{id}` → Update existing records
-- `DELETE /api/[controller]/{id}` → Delete records
-
----
-
-## 🧪 Dapper Controller (Work in Progress)
-
-There is a controller named `DapperController` intended for testing and learning purposes using Dapper.
-
-> **Note:** This controller is currently under development and does not yet contain full implementations. It exists as part of an ongoing learning process.
-
----
-
-## ⚙️ Getting Started
-
-1. Clone the repository
-2. Configure your database connection in `appsettings.json`
-3. Run migrations (if applicable)
-4. Start the project:
-
-```bash
-dotnet run
+Nota final
+Proyecto orientado a aprendizaje práctico en .NET 10 y EF Core.

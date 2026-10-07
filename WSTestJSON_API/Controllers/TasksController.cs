@@ -56,14 +56,21 @@ namespace WSTestJSON_API.Controllers
         {
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            if (currentUserId != id)
-            {
-                return Forbid();
-            }
+            var roleId = User.FindFirst(ClaimTypes.Role)?.Value;
 
             try
             {
-                var tareas = await _context.TareasUsuario.Where(tasks => tasks.IdUser == id).ToListAsync();
+                var isAdmin = roleId == "1";
+
+                IQueryable<TareasUsuario> query = _context.TareasUsuario;
+
+                if (!isAdmin)
+                {
+                    query = query.Where(t => t.IdUser == currentUserId);
+                }
+
+                var tareas = await query.ToListAsync();
+
                 if (!tareas.Any())
                 {
                     return NoContent();
