@@ -1,4 +1,4 @@
-.NET Services API
-This project contains a set of RESTful services built with ASP.NET Core.
+.NET Core 10 API
+Este proeyecto contiene servicios RESTful hechos con ASP.NET Core 10.
 
-the complete readme is inside the [WSTestJSON_API] folder!
+Más detalles estan dentro de la carpeta [WSTestJSON_API].
